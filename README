@@ -1,0 +1,15 @@
+This Python script is tested for use with Pythonista 3 for iOS.
+
+When looking at song lyrics on lyrical-nonsense.com, the script can be run from the iOS share sheet. The scripts gets the URL, and outputs LaTeX code (upLaTeX) with the lyrics with added furigana to the clipboard.
+
+TODOs:
+
+* Bring the process of adding furigana offline with the Furigana Python package, if feasible within Pythonista.
+
+* Update to Python 3, depends on previous point as the mechanize library would be dropped.
+
+* Let user choose paper orientation instead of defaulting to landscape with vertical text.
+
+* Output to a file.
+
+* Pick a license.
