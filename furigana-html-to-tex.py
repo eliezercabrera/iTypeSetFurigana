@@ -1,4 +1,3 @@
-#!/usr/bin/env python2
 from bs4 import BeautifulSoup
 from string import Template
 from collections import defaultdict
@@ -6,8 +5,7 @@ from collections import defaultdict
 import appex
 import requests
 import clipboard
-import mechanize
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 import sys
 
 class MyHTMLParser(HTMLParser, object):
@@ -63,7 +61,7 @@ class MyHTMLParser(HTMLParser, object):
 			self.tex.append(to_append.substitute(data=data))
 
 	def refresh_statuses(self, tag, stage):
-		for key, value in self.statuses.iteritems():
+		for key, value in self.statuses.items():
 			if tag in value['toggles']:
 				if value['toggles'][tag]['stage'] == stage:
 					self.statuses[key]['status'] = value['toggles'][tag]['status']
@@ -116,15 +114,12 @@ def prepare_lyrics_for_furiganization(lyrics):
 	return '\n'.join(refined_lyrics)
 
 def furiganize_lyrics(lyrics):
-		browser = mechanize.Browser()
-		browser.open('http://furigana.sourceforge.net/cgi-bin/index.cgi')
-		browser.select_form(nr=0)
-		browser.form['text'] = lyrics
-		furigana_request = browser.submit()
-		return furigana_request.read().decode('utf-8')
+	url = 'http://furigana.sourceforge.net/cgi-bin/index.cgi'
+	data = {'text': (None, lyrics), 'state': (None, 'output')}
+	return requests.post(url, files=data).text
 
 def fill_tex_template(artist, title, lyrics):
-	template_file = open('tex_template.tex', 'r')
+	template_file = open('tex_template.tex', 'r', encoding='utf-8')
 	template = Template(template_file.read())
 	return template.substitute(artist=artist, title=title, lyrics=lyrics)
 
@@ -141,6 +136,8 @@ def main():
 
 	parser = MyHTMLParser()
 	parser.feed(furigana_lyrics_html)
+	
+	print(parser.get_lyrics())
 	
 	clipboard.set(fill_tex_template(artist, title, parser.get_lyrics()))
 
