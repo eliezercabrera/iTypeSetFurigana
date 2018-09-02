@@ -1,0 +1,21 @@
+\documentclass[a4j,12pt,twocolumn,landscape]{utarticle}
+\usepackage{pxrubrica}
+\usepackage{tcsourcehans}
+
+\def\mcdefault{sourcehans}% 本文を Source Han Sans JP Normal に
+\def\gtdefault{sourcehans}
+\rubyfontsetup{\kanjifamily{sourcehans}\fontseries{l}\selectfont}
+
+\newenvironment{myfont}{\fontfamily{phv}\selectfont}{\par}                                                                                
+\DeclareTextFontCommand{\gaijin}{\myfont}                                                                                                                                          
+\pagenumbering{gobble}
+
+\author{$artist}
+\title{$title}
+\date{\vspace{-5ex}}
+%\date{} % Toggle commenting to test
+\begin{document}
+\maketitle
+\sffamily
+$lyrics
+\end{document}
