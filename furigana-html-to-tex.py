@@ -34,14 +34,17 @@ class MyHTMLParser(HTMLParser, object):
 
 	def handle_data(self, data):
 		self.handle_streak('handle_data', self.Stage.DATA)
-		
+				
 		to_append = Template('$data')
 		if self.is_processing['rp']:
 			to_append = Template('')
 		if self.is_processing['rb']:
-			to_append = Template('{$data}')
+			if len(data) == 1:
+				to_append = Template('{$data}')
+			else:
+				to_append = Template('[g]{$data}')
 		if self.is_processing['rt']:
-			to_append = Template('{|$data}')
+			to_append = Template('{$data}')
 		self.tex.append(to_append.substitute(data=data))
 	
 	def reset_streak(self):
@@ -66,7 +69,7 @@ class MyHTMLParser(HTMLParser, object):
 		elif stage in [self.Stage.START, self.Stage.DATA]:
 			if tag == 'ruby':
 				if stage == self.Stage.START:
-					to_append = '\\jruby'
+					to_append = '\\ruby'
 			if tag == 'br':
 				to_append = self.NEXT_LINE if count <= 2 else self.NEXT_VERSE				
 			self.new_streak(next_tag)
@@ -113,9 +116,14 @@ def fill_tex_template(artist, title, lyrics):
 	return template.substitute(artist=artist, title=title, lyrics=lyrics)
 
 def main():
-	if not appex.is_running_extension():
-		sys.exit('This script must be run from Safari\'s share sheet.')
-	url = appex.get_url()
+	debug = True
+	url = 'https://www.lyrical-nonsense.com/lyrics/aimer/brave-shine/'
+	
+	if not debug:
+		if not appex.is_running_extension():
+			sys.exit('This script must be run from Safari\'s share sheet.')
+		url = appex.get_url()
+
 	if 'www.lyrical-nonsense.com' not in url:
 		sys.exit('This script must be run on lyrical-nonsense.com')
 
@@ -125,7 +133,11 @@ def main():
 
 	parser = MyHTMLParser()
 	parser.feed(furigana_lyrics_html)
-		
+	
+	if debug:
+		print(furigana_lyrics_html)
+		print(parser.get_lyrics())
+	
 	clipboard.set(fill_tex_template(artist, title, parser.get_lyrics()))
 
 if __name__ == '__main__':
