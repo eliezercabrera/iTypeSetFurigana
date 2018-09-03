@@ -116,7 +116,7 @@ def fill_tex_template(artist, title, lyrics):
 	return template.substitute(artist=artist, title=title, lyrics=lyrics)
 
 def main():
-	debug = True
+	debug = False
 	url = 'https://www.lyrical-nonsense.com/lyrics/aimer/brave-shine/'
 	
 	if not debug:
