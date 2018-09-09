@@ -20,80 +20,50 @@ class MyHTMLParser(HTMLParser, object):
 		self.NEXT_LINE = '\n\n'
 		self.NEXT_VERSE = '\n\n\\bigskip\n\n'
 
-		self.streak = ('', 0)
 		self.is_processing = defaultdict(lambda: False)
 		self.tex = []
 
 	def handle_starttag(self, tag, attrs):
 		self.is_processing[tag] = True
-		self.handle_streak(tag, self.Stage.START) 
+		if tag == 'br':
+			self.tex.append(self.NEXT_LINE)
 
 	def handle_endtag(self, tag):
 		self.is_processing[tag] = False
-		self.handle_streak(tag, self.Stage.END)
+		if tag == 'p':
+			self.tex.append(self.NEXT_VERSE)
 
-	def handle_data(self, data):
-		self.handle_streak('handle_data', self.Stage.DATA)
-				
+	def handle_data(self, data):				
 		to_append = Template('$data')
 		if self.is_processing['rp']:
 			to_append = Template('')
 		if self.is_processing['rb']:
 			if len(data) == 1:
-				to_append = Template('{$data}')
+				to_append = Template('\\ruby{$data}')
 			else:
-				to_append = Template('[g]{$data}')
+				to_append = Template('\\ruby[g]{$data}')
 		if self.is_processing['rt']:
 			to_append = Template('{$data}')
 		self.tex.append(to_append.substitute(data=data))
-	
-	def reset_streak(self):
-		tag, _ = self.streak
-		self.streak = (tag, 0)
-	
-	def increase_streak(self):
-		tag, count = self.streak
-		self.streak = (tag, count + 1)
-	
-	def new_streak(self, tag):
-		self.streak = (tag, 1)
-	
-	def handle_streak(self, next_tag, stage):
-		to_append = ''
-		tag, count = self.streak
-		if tag == next_tag and stage == self.Stage.START:
-			self.increase_streak()
-		# TODO: Review if this elif is necessary.
-		elif stage == self.Stage.END and tag == 'handle_data':
-			self.reset_streak()
-		elif stage in [self.Stage.START, self.Stage.DATA]:
-			if tag == 'ruby':
-				if stage == self.Stage.START:
-					to_append = '\\ruby'
-			if tag == 'br':
-				to_append = self.NEXT_LINE if count <= 2 else self.NEXT_VERSE				
-			self.new_streak(next_tag)
-		self.tex.append(to_append)
 
 	def get_lyrics(self):
-		return ''.join(self.tex)
+		final_lyrics = []
+		previous_line = 'dummy_non_empty'
+		for line in ''.join(self.tex).splitlines():
+			if not (previous_line == '' and line == ''):
+				final_lyrics.append(line)
+			previous_line = line
+		return '\n'.join(final_lyrics)
 
 def extract_song_info(url):
 	bs_raw_lyrics = BeautifulSoup(requests.get(url).text, "html5lib")
 	
 	artist = bs_raw_lyrics.find('div', class_='artistcontainer').get_text()
 	title = bs_raw_lyrics.find('div', class_='titlelyricblocknew').find('h1').get_text()
-	lyrics, _ = bs_raw_lyrics.find('div', id='Lyrics').get_text().split('eval(')
-	return (artist, title, lyrics)	
-
-def prepare_lyrics_for_furiganization(lyrics):
-	refined_lyrics = []
-	for line in lyrics.splitlines():
-		if line == '':
-			refined_lyrics.append('\n\n')
-		else:
-			refined_lyrics.append("%s\n" % line)
-	return '\n'.join(refined_lyrics)
+	raw_lyrics = str(bs_raw_lyrics.find('div', class_='olyrictext'))
+	preprocessed_lyrics = raw_lyrics.replace('<div class="olyrictext">', '').replace('</div>', '')
+	lyrics = '\n\n'.join(preprocessed_lyrics.splitlines())
+	return (artist, title, lyrics)
 
 def furiganize_lyrics(lyrics):
 	url = 'http://furigana.sourceforge.net/cgi-bin/index.cgi'
@@ -107,7 +77,8 @@ def furiganize_lyrics(lyrics):
 	form_tag = '<form'
 	end = body.find(form_tag)
 
-	processed_lyrics = body[start + len(body_tag) : end]
+	preprocessed_lyrics = body[start + len(body_tag) : end]
+	processed_lyrics = preprocessed_lyrics.replace('&lt;p&gt;', '<p>').replace('&lt;/p&gt;', '</p>')
 	return processed_lyrics
 
 def fill_tex_template(artist, title, lyrics):
@@ -117,9 +88,10 @@ def fill_tex_template(artist, title, lyrics):
 
 def main():
 	debug = False
+	get_lyrics_from_clipboard = False
 	url = 'https://www.lyrical-nonsense.com/lyrics/aimer/brave-shine/'
 	
-	if not debug:
+	if not debug and not get_lyrics_from_clipboard:
 		if not appex.is_running_extension():
 			sys.exit('This script must be run from Safari\'s share sheet.')
 		url = appex.get_url()
@@ -127,14 +99,21 @@ def main():
 	if 'www.lyrical-nonsense.com' not in url:
 		sys.exit('This script must be run on lyrical-nonsense.com')
 
-	artist, title, lyrics = extract_song_info(url)
-	preprocessed_lyrics = prepare_lyrics_for_furiganization(lyrics)
-	furigana_lyrics_html = furiganize_lyrics(preprocessed_lyrics)
+	artist = 'blank'
+	title = 'blank'
+	lyrics= ''
+	if get_lyrics_from_clipboard:
+		lyrics = clipboard.get()
+	else:
+		artist, title, lyrics = extract_song_info(url)
+
+	furigana_lyrics_html = furiganize_lyrics(lyrics)
 
 	parser = MyHTMLParser()
 	parser.feed(furigana_lyrics_html)
 	
 	if debug:
+		print(lyrics)
 		print(furigana_lyrics_html)
 		print(parser.get_lyrics())
 	
