@@ -1,15 +1,17 @@
-This Python script is tested for use with Pythonista 3 for iOS.
+The different pieces of this repository allow me, from a device running iOS, to create a PDF containing the Japanese lyrics of a song. Furigana are added to the lyrics.
 
-When looking at song lyrics on lyrical-nonsense.com, the script can be run from the iOS share sheet. The scripts gets the URL, and outputs LaTeX code (upLaTeX) with the lyrics with added furigana to the clipboard.
+Here follows a brief description of how the several pieces interact:
 
-TODOs:
+- iOS Shortcut
+	-	Captures the title, artist, and lyrics of a song.
+- Python script, run from Pythonista
+	-	Embeds song info into a upLaTEX template.
+- iOS Shortcut
+	-	Saves .tex file to personal server.
+- inotifywait watch script
+	-	Compiles .tex files to PDF.
+	-	Moves PDFs to a servable folder.
+- NGINX server
+	-	Serves PDFs.
 
-* Bring the process of adding furigana offline with the Furigana Python package, if feasible within Pythonista.
-
-* Update to Python 3, depends on previous point as the mechanize library would be dropped.
-
-* Let user choose paper orientation instead of defaulting to landscape with vertical text.
-
-* Output to a file.
-
-* Pick a license.
+The NGINX server configuration is dead simple, and thus has no place in this repository.
