@@ -22,6 +22,7 @@ def main():
 		landscape = ''
 		if 'landscape' in first_line:
 			landscape = '-l'
+		
 		uplatex = 'uplatex -interaction=nonstopmode %s' % file_path
 		os.system(uplatex)
 		
@@ -31,6 +32,10 @@ def main():
 		target = '/home/eli/www/documents/'
 		cp = 'cp %s.pdf %s' % (filename, target)
 		os.system(cp)
+		
+		for garbage_extension in ['aux', 'log', 'dvi', 'pdf']:
+			rm = 'rm %s.%s' % (filename, garbage_extension)
+			os.system(rm)
 
 if __name__ == '__main__':
 	main()
