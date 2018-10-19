@@ -2,12 +2,14 @@ from bs4 import BeautifulSoup
 from collections import defaultdict
 from enum import Enum
 from html.parser import HTMLParser
+from optparse import OptionParser
 from string import Template
 
 import appex
 import clipboard
 import requests
 import sys
+import webbrowser
 
 class MyHTMLParser(HTMLParser, object):
 	class Stage(Enum):
@@ -87,24 +89,50 @@ def fill_tex_template(artist, title, lyrics):
 	return template.substitute(artist=artist, title=title, lyrics=lyrics)
 
 def main():
-	debug = False
-	get_lyrics_from_clipboard = False
-	url = 'https://www.lyrical-nonsense.com/lyrics/aimer/brave-shine/'
-	
-	if not debug and not get_lyrics_from_clipboard:
-		if not appex.is_running_extension():
-			sys.exit('This script must be run from Safari\'s share sheet.')
-		url = appex.get_url()
+	parser = OptionParser()
+	parser.add_option('-u',
+										'--url',
+										dest='url',
+										help='Gets song information from URL; its domain must be lyrical-nonsense',
+										metavar='URL')
+	parser.add_option('-a',
+										'--author',
+										dest='author',
+										help='Sets song performer to AUTHOR',
+										metavar='AUTHOR')
+	parser.add_option('-t',
+										'--title',
+										dest='title',
+										help='Sets the title of the song to TITLE',
+										metavar='TITLE')
+	parser.add_option('-l',
+										'--lyrics',
+										dest='lyrics',
+										help='Sets the lyrics of the song to LYRICS',
+										metavar='LYRICS')
+	parser.add_option('-d',
+										'--debug',
+										action='store_true',
+										dest='debug',
+										default=False,
+										help='Runs in debug mode')
+	(options, args) = parser.parse_args()
 
-	if 'www.lyrical-nonsense.com' not in url:
+	debug = options.debug
+	url = options.url
+	artist = options.author
+	title = options.author
+	lyrics = options.lyrics
+	if debug:
+		url = 'https://www.lyrical-nonsense.com/lyrics/aimer/brave-shine/'
+
+	if not url and not lyrics:
+		sys.exit('No url or lyricis provided. This script must be run from from Workflow, or in debug mode.')
+
+	if url and 'www.lyrical-nonsense.com' not in url:
 		sys.exit('This script must be run on lyrical-nonsense.com')
 
-	artist = 'blank'
-	title = 'blank'
-	lyrics= ''
-	if get_lyrics_from_clipboard:
-		lyrics = clipboard.get()
-	else:
+	if url:
 		artist, title, lyrics = extract_song_info(url)
 
 	furigana_lyrics_html = furiganize_lyrics(lyrics)
@@ -118,6 +146,7 @@ def main():
 		print(parser.get_lyrics())
 	
 	clipboard.set(fill_tex_template(artist, title, parser.get_lyrics()))
+	webbrowser.open('safari://')
 
 if __name__ == '__main__':
 	main()
