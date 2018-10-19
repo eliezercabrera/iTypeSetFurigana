@@ -57,15 +57,12 @@ class MyHTMLParser(HTMLParser, object):
 			previous_line = line
 		return '\n'.join(final_lyrics)
 
-def extract_song_info(url):
-	bs_raw_lyrics = BeautifulSoup(requests.get(url).text, "html5lib")
-	
-	artist = bs_raw_lyrics.find('div', class_='artistcontainer').get_text()
-	title = bs_raw_lyrics.find('div', class_='titlelyricblocknew').find('h1').get_text()
-	raw_lyrics = str(bs_raw_lyrics.find('div', class_='olyrictext'))
-	preprocessed_lyrics = raw_lyrics.replace('<div class="olyrictext">', '').replace('</div>', '')
-	lyrics = '\n\n'.join(preprocessed_lyrics.splitlines())
-	return (artist, title, lyrics)
+def preprocess_lyrics(lyrics):
+	preprocessed_lines = []
+	for line in lyrics.splitlines():
+		preprocessed_lines.append(line)
+		preprocessed_lines.append('')
+	return '\n'.join(preprocessed_lines)
 
 def furiganize_lyrics(lyrics):
 	url = 'http://furigana.sourceforge.net/cgi-bin/index.cgi'
@@ -90,11 +87,6 @@ def fill_tex_template(artist, title, lyrics):
 
 def main():
 	parser = OptionParser()
-	parser.add_option('-u',
-										'--url',
-										dest='url',
-										help='Gets song information from URL; its domain must be lyrical-nonsense',
-										metavar='URL')
 	parser.add_option('-a',
 										'--author',
 										dest='author',
@@ -119,23 +111,11 @@ def main():
 	(options, args) = parser.parse_args()
 
 	debug = options.debug
-	url = options.url
 	artist = options.author
-	title = options.author
+	title = options.title
 	lyrics = options.lyrics
-	if debug:
-		url = 'https://www.lyrical-nonsense.com/lyrics/aimer/brave-shine/'
-
-	if not url and not lyrics:
-		sys.exit('No url or lyricis provided. This script must be run from from Workflow, or in debug mode.')
-
-	if url and 'www.lyrical-nonsense.com' not in url:
-		sys.exit('This script must be run on lyrical-nonsense.com')
-
-	if url:
-		artist, title, lyrics = extract_song_info(url)
-
-	furigana_lyrics_html = furiganize_lyrics(lyrics)
+	
+	furigana_lyrics_html = furiganize_lyrics(preprocess_lyrics(lyrics))
 
 	parser = MyHTMLParser()
 	parser.feed(furigana_lyrics_html)
@@ -146,7 +126,7 @@ def main():
 		print(parser.get_lyrics())
 	
 	clipboard.set(fill_tex_template(artist, title, parser.get_lyrics()))
-	webbrowser.open('safari://')
+	webbrowser.open('shortcuts://')
 
 if __name__ == '__main__':
 	main()
