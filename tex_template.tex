@@ -1,13 +1,13 @@
-\documentclass[a4j,12pt,twocolumn,landscape]{utarticle}
+\documentclass[uplatex,a4paper,fontsize=11pt,twocolumn,margin]{utarticle}
+\usepackage{bxpapersize}
 \usepackage{pxrubrica}
-\usepackage{tcsourcehans}
+\usepackage[sourcehan]{pxchfon}
 
-\def\mcdefault{sourcehans}% 本文を Source Han Sans JP Normal に
-\def\gtdefault{sourcehans}
-\rubyfontsetup{\kanjifamily{sourcehans}\fontseries{l}\selectfont}
-
-\newenvironment{myfont}{\fontfamily{phv}\selectfont}{\par}                                                                                
-\DeclareTextFontCommand{\gaijin}{\myfont}                                                                                                                                          
+\addtolength{\oddsidemargin}{-.20in}
+\addtolength{\evensidemargin}{-.20in}
+\addtolength{\textwidth}{.5in}
+\addtolength{\topmargin}{-1.25in}
+\addtolength{\textheight}{2.15in}
 \pagenumbering{gobble}
 
 \author{$artist}
@@ -16,6 +16,6 @@
 %\date{} % Toggle commenting to test
 \begin{document}
 \maketitle
-\sffamily
+\sffamily\gtfamily
 $lyrics
 \end{document}

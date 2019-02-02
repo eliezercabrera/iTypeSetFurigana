@@ -26,10 +26,10 @@ def main():
 		uplatex = 'uplatex -interaction=nonstopmode %s' % file_path
 		os.system(uplatex)
 		
-		dvipdfmx = 'dvipdfmx %s %s.dvi' % (landscape, filename)
+		dvipdfmx = 'dvipdfmx %s -p a4 %s.dvi' % (landscape, filename)
 		os.system(dvipdfmx)
 		
-		target = '/home/eli/www/documents/'
+		target = '/var/www/documents/'
 		cp = 'cp %s.pdf %s' % (filename, target)
 		os.system(cp)
 		
