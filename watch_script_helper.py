@@ -19,6 +19,7 @@ def main():
 	
 	with open(file_path, 'r', encoding='utf-8') as file:
 		first_line = file.readline()
+		first_line = file.readline()
 		landscape = ''
 		if 'landscape' in first_line:
 			landscape = '-l'
